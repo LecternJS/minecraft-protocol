@@ -12,7 +12,10 @@
     "eslint-config-kashall": "https://github.com/Kashalls/kashall-lint.git"
   },
   "scripts": {
-    "test": "eslint ."
+    "test": "npm run lint && npm run docs:test && npm run lint:typings",
+    "lint": "eslint .",
+    "docs": "docgen --source src --custom docs/index.yml --output docs/docs.json",
+    "docs:test": "docgen --source src --custom docs/index.yml"
   },
   "dependencies": {
     "@azure/msal-node": "^1.0.0-beta.3",
