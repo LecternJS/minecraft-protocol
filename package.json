@@ -20,6 +20,7 @@
   "dependencies": {
     "@azure/msal-node": "^1.0.0-beta.3",
     "@xboxreplay/xboxlive-auth": "^3.3.3",
+    "discord.js-docgen": "github:discordjs/docgen",
     "minecraft-data": "^2.72.0",
     "node-fetch": "^2.6.1",
     "protodef": "^1.8.3",
