@@ -17,11 +17,10 @@ const Decipher = require('../Util/Decipher');
 const createSerializer = require('../Util/Serializer');
 const createDeserializer = require('../Util/Deserializer');
 
-const debug = require('debug')('minecraft-protocol:baseclient');
-
 /**
  * Constructs the base client. This is practically a serializer.
  * @param {BaseClientOptions} [options={}] The configuration to pass to this class.
+ * @extends {EventEmitter}
  */
 
 class BaseClient extends EventEmitter {
@@ -56,21 +55,30 @@ class BaseClient extends EventEmitter {
 		this._version = this.options.version;
 
 		/**
-		 * Whether or not this bot has been ended/destroyed.
+		 * If this client was destroyed. It will prevent the client from reconnecting.
 		 * @type {boolean}
 		 */
-		this._ended = true;
+		this.destroyed = true;
 
 		/**
 		 * The state this bot is in with trying to connect to the remote host.
 		 * @type {string}
+		 * @private
 		 */
 		this.state = Constants.ProtocolStates.HANDSHAKING;
+
+		/**
+     	* If this manager is currently reconnecting one or multiple shards
+     	* @type {boolean}
+     	* @private
+     	*/
+		this.reconnecting = false;
 
 		/**
 		 * Splitter that will be used to read packets.
 		 * @type {Splitter}
 		 * @param {object}
+		 * @private
 		 */
 		this.splitter = new Splitter();
 
@@ -78,6 +86,7 @@ class BaseClient extends EventEmitter {
 		 * Framer that will be used to rebuild packets.
 		 * @type {Framer}
 		 * @param {object}
+		 * @private
 		 */
 		this.framer = new Framer();
 
@@ -85,6 +94,7 @@ class BaseClient extends EventEmitter {
 		 * The compressor used deflate packets.
 		 * @type {Compressor}
 		 * @param {object}
+		 * @private
 		 */
 		this.compressor = null;
 
@@ -92,17 +102,21 @@ class BaseClient extends EventEmitter {
 		 * The decompressor used to gunzip packets.
 		 * @type {Decompressor}
 		 * @param {object}
+		 * @private
 		 */
 		this.decompressor = null;
 
 		/**
 		 * The cipher used to encrypt packets to the server.
 		 * @type {Cipher}
+		 * @private
 		 */
 		this.cipher = null;
 
 		/**
 		 * The decipher used to decript packets from the server.
+		 * @type {Decipher}
+		 * @private
 		 */
 		this.decipher = null;
 
@@ -115,18 +129,21 @@ class BaseClient extends EventEmitter {
 		/**
 		 * Packet serializer
 		 * @type {Serializer}
+		 * @private
 		 */
 		this.serializer = null;
 
 		/**
 		 * Packet deserializer
 		 * @type {Deserializer}
+		 * @private
 		 */
 		this.deserializer = null;
 
 		/**
 		 * The timer for detecting if we disconnected or lost connection with the remove server
 		 * @type {boolean|Function}
+		 * @private
 		 */
 		this.closeTimer = null;
 	}
@@ -192,11 +209,11 @@ class BaseClient extends EventEmitter {
 	}
 
 	setSocket(socket) {
-		this._ended = false;
+		this.destroyed = false;
 
 		const endSocket = () => {
-			if (this._ended) return;
-			this._ended = true;
+			if (this.destroyed) return;
+			this.destroyed = true;
 			clearTimeout(this.closeTimer);
 			this.socket.removeListener('close', endSocket);
 			this.socket.removeListener('end', endSocket);
@@ -282,11 +299,9 @@ class BaseClient extends EventEmitter {
 			parsed.metadata.name = parsed.data.name;
 			parsed.data = parsed.data.params;
 			parsed.metadata.state = state;
-			debug(`read packet ${state}.${parsed.metadata.name}`);
-			if (debug.enabled) {
-				const string = JSON.stringify(parsed.data, null, 2);
-				debug(string && string.length > 10000 ? parsed.data : string);
-			}
+			this.emit('debug', `read packet ${state}.${parsed.metadata.name}`);
+			const string = JSON.stringify(parsed.data, null, 2);
+			this.emit('debug', string && string.length > 10000 ? parsed.data : string);
 			this.emit('packet', parsed.data, parsed.metadata, parsed.buffer);
 			this.emit(parsed.metadata.name, parsed.data, parsed.metadata);
 			this.emit(`raw.${parsed.metadata.name}`, parsed.buffer, parsed.metadata);
@@ -295,8 +310,10 @@ class BaseClient extends EventEmitter {
 	}
 
 	destroy() {
-		for (const timeout of this._timeouts) this.clearTimeout(timeout);
-		this._timeouts.clear();
+		if (this.destroyed) return;
+		this.emit('debug', `BaseClient was destroyed. Called by:\n${new Error('BASECLIENT_DESTROYED').stack}`);
+		this.destroyed = true;
+		this.end('internal destroy');
 	}
 
 	end(reason) {
@@ -311,8 +328,8 @@ class BaseClient extends EventEmitter {
 
 	write(name, params) {
 		if (!this.serializer.writable) { return; }
-		debug(`writing packet ${this.state}.${name}`);
-		debug(params);
+		this.emit('debug', `writing packet ${this.state}.${name}`);
+		this.emit('debug', params);
 		this.serializer.write({ name, params });
 	}
 
@@ -324,17 +341,17 @@ class BaseClient extends EventEmitter {
 
 	connect() {
 		if (this.options.stream) {
-			debug('Stream has been set... Using it to connect instead of default...');
+			this.emit('debug', 'Stream has been set... Using it to connect instead of default...');
 			this.setSocket(this.options.stream);
 			return this.emit('connect');
 		}
 
 		if (this.options.port === 25565 && net.isIP(this.options.host) === 0 && this.options.host !== 'localhost') {
-			debug('Preforming SRV Lookup...');
+			this.emit('debug', 'Preforming SRV Lookup...');
 			dns.resolveSrv(`_minecraft._tcp.${this.options.host}`, (err, hostname) => {
-				if (err) debug(`SRV Lookup of Host ${this.options.host} returned: ${err}`);
+				if (err) this.emit('debug', `SRV Lookup of Host ${this.options.host} returned: ${err}`);
 				if (hostname && hostname.length > 0) {
-					debug(`SRV Lookup got ${hostname}`);
+					this.emit('debug', `SRV Lookup got ${hostname}`);
 					this.options.host = hostname[0].name;
 					this.options.port = hostname[0].port;
 				}
