@@ -125,8 +125,6 @@ class Client extends BaseClient {
 
 		if (this.options.version === false) await queryServer(this);
 
-		this._assignListeners();
-
 
 		// Handle Session Server Join Requests and Encryption Things. (encypt.js)
 		// figure out something about plugin channels
@@ -135,28 +133,6 @@ class Client extends BaseClient {
 		super.connect();
 	}
 
-
-	_assignListeners() {
-		this.on('disconnect', (message) => {
-			if (!message.reason) return;
-			message = JSON.parse(message.reason);
-			let text = message.text ? message.text : message;
-			let versionRequired;
-
-			if (text.translate && text.translate.startsWith('multiplayer.disconnect.outdated_')) {
-				[versionRequired] = text.with;
-			} else {
-				if (text.extra) [[text]] = text.extra;
-				versionRequired = /(?:Outdated client! Please use|Outdated server! I'm still on) (.+)/.exec(text);
-				versionRequired = versionRequired ? versionRequired[1] : null;
-			}
-
-			if (!versionRequired) { return; }
-			this.end();
-			this.emit('error', new Error(`This server is version ${versionRequired
-			}, you are using version ${this.version}, please specify the correct version in the options.`));
-		});
-	}
 
 	async reconnect() {
 		if (this.reconnecting || this.status !== 'ready') return false;
