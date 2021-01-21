@@ -290,7 +290,7 @@ class BaseClient extends EventEmitter {
 
 	setSerializer(state) {
 		this.serializer = createSerializer({ isServer: this.isServer, version: this.version, state: state, customPackets: this.customPackets });
-		this.deserializer = createDeserializer({ isServer: this.isServer, version: this._version, state, customPackets: this.options.customPackets,	noErrorLogging: this.production	});
+		this.deserializer = createDeserializer({ isServer: this.isServer, version: this.version, state, customPackets: this.options.customPackets,	noErrorLogging: this.production	});
 
 		this.splitter.recognizeLegacyPing = state === Constants.ProtocolStates.HANDSHAKING;
 
