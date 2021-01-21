@@ -1,1 +1,1 @@
-## [View the documentation here.]()
+## [View the documentation here.](https://lectern.jordanjones.org)

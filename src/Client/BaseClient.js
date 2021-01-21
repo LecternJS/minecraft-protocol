@@ -34,11 +34,9 @@ class BaseClient extends EventEmitter {
 		 * @name BaseClient#options
 		 * @type {BaseClientOptions}
 		 */
-
 		this.options = Util.mergeDefault(Constants.BaseClient, options);
 		const minecraftdata = minecraftData(this.options.version);
 		if (!minecraftdata) throw Error(`Unsupported Protocol Version: ${this.options.version}`);
-		this.version = minecraftdata.version;
 
 		/**
 		 * Whether or not this process is in production or not.
@@ -52,7 +50,7 @@ class BaseClient extends EventEmitter {
 		 * The Minecraft Version of the server we are connecting to. Set to '1.16.4' by default, 'false' to auto-detect.
 		 * @type {string|boolean}
 		 */
-		this._version = this.options.version;
+		this.version = minecraftdata.version;
 
 		/**
 		 * If this client was destroyed. It will prevent the client from reconnecting.
@@ -148,10 +146,22 @@ class BaseClient extends EventEmitter {
 		this.closeTimer = null;
 	}
 
+	/**
+	 * Fetches the current state of interaction with the minecraft protocol.
+	 * @since 0.0.1
+	 * @type {string}
+	 * @readonly
+	 */
 	get state() {
 		return this.protocolState || 'Unknown';
 	}
 
+	/**
+	 * When the state is updated, we pipe and unpipe the de/serializers.
+	 * @since 0.0.1
+	 * @returns {emit}
+	 * @writeonly
+	 */
 	set state(property) {
 		const oldProperty = this.propertyState;
 		this.protocolState = property;
@@ -178,9 +188,15 @@ class BaseClient extends EventEmitter {
 			this.decompressor.pipe(this.deserializer);
 		}
 
-		this.emit('state', property, oldProperty);
+		return this.emit('state', property, oldProperty);
 	}
 
+	/**
+	 * Fetches the current compression threshold to be used with the compressor.
+	 * @readonly
+	 * @since 0.0.1
+	 * @type {number|string}
+	 */
 	get compressionThreshold() {
 		return this.compressor === null ? -2 : this.compressor.compressionThreshold;
 	}
@@ -188,6 +204,11 @@ class BaseClient extends EventEmitter {
 	set compressionThreshold(threshold) {
 		this.setCompressionThreshold(threshold);
 	}
+
+	/**
+	 * Sets the threshold for compression based on data recieved from packets.
+	 * @param {number} threshold The threshold from any packets recieved from the minecraft server.
+	 */
 
 	setCompressionThreshold(threshold) {
 		if (this.compressor === null) {
@@ -208,6 +229,10 @@ class BaseClient extends EventEmitter {
 		}
 	}
 
+	/**
+	 * Sets and creates all of the events needed for the socket.
+	 * @param {socket} socket a nodejs net socket
+	 */
 	setSocket(socket) {
 		this.destroyed = false;
 
@@ -240,14 +265,18 @@ class BaseClient extends EventEmitter {
 		this.framer.pipe(this.socket);
 	}
 
-	setEncryption(sharedSecret) {
+	/**
+	 * Used to create the cipher/decipher engine after yggdrasil server authentication.
+	 * @param {string} secret 
+	 */
+	setEncryption(secret) {
 		if (this.cipher !== null) this.emit('error', new Error('Set encryption twice!'));
 		if (crypto.getCiphers().includes(Constants.Cipher)) {
-			this.cipher = crypto.createCipheriv(Constants.Cipher, sharedSecret, sharedSecret);
-			this.decipher = crypto.createDecipheriv(Constants.Cipher, sharedSecret, sharedSecret);
+			this.cipher = crypto.createCipheriv(Constants.Cipher, secret, secret);
+			this.decipher = crypto.createDecipheriv(Constants.Cipher, secret, secret);
 		} else {
-			this.cipher = new Cipher(sharedSecret);
-			this.decipher = new Decipher(sharedSecret);
+			this.cipher = new Cipher(secret);
+			this.decipher = new Decipher(secret);
 		}
 		this.cipher.on('error', (err) => this.emit('error', err));
 		this.decipher.on('error', (err) => this.emit('error', err));
@@ -309,13 +338,20 @@ class BaseClient extends EventEmitter {
 		});
 	}
 
+	/**
+	 * Used to completely destroy the bot. Use end if you want to eventually reconnect.
+	 */
 	destroy() {
 		if (this.destroyed) return;
 		this.emit('debug', `BaseClient was destroyed. Called by:\n${new Error('BASECLIENT_DESTROYED').stack}`);
 		this.destroyed = true;
-		this.end('internal destroy');
+		this.end('internal destroy')
 	}
 
+	/**
+	 * Used to end the current session. Use destroy() if you do not wish to reconnect.
+	 * @param {string} reason Reason for ending the bot's current session.
+	 */
 	end(reason) {
 		this._endReason = reason;
 		/* ending the serializer will end the whole chain
@@ -326,6 +362,11 @@ class BaseClient extends EventEmitter {
 		if (this.socket) this.closeTimer = setTimeout(this.socket.destroy.bind(this.socket), 30000);
 	}
 
+	/**
+	 * Writes packet data to serializer if possible.
+	 * @param {string} name Packet Name
+	 * @param {string|array} params Parameters
+	 */
 	write(name, params) {
 		if (!this.serializer.writable) { return; }
 		this.emit('debug', `writing packet ${this.state}.${name}`);
@@ -333,12 +374,19 @@ class BaseClient extends EventEmitter {
 		this.serializer.write({ name, params });
 	}
 
+	/**
+	 * Writes RAW Buffer Data to framer/compressor.
+	 * @param {buffer} buffer Packet Buffer Data
+	 */
 	writeRaw(buffer) {
 		const stream = this.compressor === null ? this.framer : this.compressor;
 		if (!stream.writable) { return; }
 		stream.write(buffer);
 	}
 
+	/**
+	 * Connects to the host specified in BaseClientOptions.
+	 */
 	connect() {
 		if (this.options.stream) {
 			this.emit('debug', 'Stream has been set... Using it to connect instead of default...');
