@@ -11,6 +11,8 @@ module.exports = {
 		customPackets: {},
 		useragent: 'Minecraft',
 		sessionServer: 'https://sessionserver.mojang.com',
+		authServer: 'https://authserver.mojang.com',
+		skipValidation: false,
 		keepalive: {
 			enabled: true,
 			interval: 30000
@@ -48,5 +50,6 @@ module.exports = {
 			clientId: '389b1b32-b5d5-43b2-bddc-84ce938d6737',
 			authority: 'https://login.microsoftonline.com/consumers'
 		}
-	}
+	},
+	LauncherProfiles: 'launcher_profiles.json'
 };
