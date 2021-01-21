@@ -156,12 +156,6 @@ class BaseClient extends EventEmitter {
 		return this.protocolState || 'Unknown';
 	}
 
-	/**
-	 * When the state is updated, we pipe and unpipe the de/serializers.
-	 * @since 0.0.1
-	 * @returns {emit}
-	 * @writeonly
-	 */
 	set state(property) {
 		const oldProperty = this.propertyState;
 		this.protocolState = property;
