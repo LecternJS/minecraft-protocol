@@ -81,41 +81,39 @@ class MicrosoftAuthFlow {
 		}
 	}
 
-}
+	static async postAuthenticate(client, options, mcAccessToken, msa) {
+		options.haveCredentials = mcAccessToken !== null;
 
-async function postAuthenticate(client, options, mcAccessToken, msa) {
-	options.haveCredentials = mcAccessToken !== null;
+		const MinecraftProfile = await fetch(Constants.MinecraftServicesProfile, Constants.NodeFetchOptions).then((res) => {
+			if (res.ok) { return res.json(); } else {
+				const user = msa ? msa.getUsers()[0] : options.username;
+				throw Error(`Failed to obtain Minecraft profile data for '${user.username}', does the account own Minecraft Java? Server returned: ${res.statusText}`);
+			}
+		});
 
-	const MinecraftProfile = await fetch(Constants.MinecraftServicesProfile, Constants.NodeFetchOptions).then((res) => {
-		if (res.ok) { return res.json(); } else {
-			const user = msa ? msa.getUsers()[0] : options.username;
-			throw Error(`Failed to obtain Minecraft profile data for '${user.username}', does the account own Minecraft Java? Server returned: ${res.statusText}`);
-		}
-	});
+		if (!MinecraftProfile.id) throw Error('This user does not own minecraft according to minecraft services.');
 
-	if (!MinecraftProfile.id) throw Error('This user does not own minecraft according to minecraft services.');
+		// This profile / session here could be simplified down to where it just passes the uuid of the player to encrypt.js
+		// That way you could remove some lines of code. It accesses client.session.selectedProfile.id so /shrug.
+		// - Kashalls
+		const profile = {
+			name: MinecraftProfile.name,
+			id: MinecraftProfile.id
+		};
 
-	// This profile / session here could be simplified down to where it just passes the uuid of the player to encrypt.js
-	// That way you could remove some lines of code. It accesses client.session.selectedProfile.id so /shrug.
-	// - Kashalls
-	const profile = {
-		name: MinecraftProfile.name,
-		id: MinecraftProfile.id
-	};
+		const session = {
+			accessToken: mcAccessToken,
+			selectedProfile: profile,
+			availableProfile: [profile]
+		};
+		client.session = session;
+		client.username = MinecraftProfile.name;
+		options.accessToken = mcAccessToken;
+		client.emit('session', session);
+		options.connect(client);
+	}
 
-	const session = {
-		accessToken: mcAccessToken,
-		selectedProfile: profile,
-		availableProfile: [profile]
-	};
-	client.session = session;
-	client.username = MinecraftProfile.name;
-	options.accessToken = mcAccessToken;
-	client.emit('session', session);
-	options.connect(client);
-}
-
-/**
+	/**
    * Authenticates with Mincrosoft through user credentials, then
    * with Xbox Live, Minecraft, checks entitlements and returns profile
    *
@@ -123,39 +121,39 @@ async function postAuthenticate(client, options, mcAccessToken, msa) {
    * @param {Object} client - The client passed to protocol
    * @param {Object} options - Client Options
    */
-async function authenticatePassword(client, options) {
-	let XAuthResponse;
+	static async authenticatePassword(client, options) {
+		let XAuthResponse;
 
-	try {
-		XAuthResponse = await XboxLiveAuth.authenticate(options.username, options.password, { XSTSRelyingParty: Constants.XSTSRelyingParty })
-			.catch((err) => {
-				console.warn('Unable to authenticate with Microsoft', err);
-				throw err;
-			});
-	} catch (error) {
-		console.log('Retrying auth with device code flow');
-		return await authenticateDeviceToken(client, options);
+		try {
+			XAuthResponse = await XboxLiveAuth.authenticate(options.username, options.password, { XSTSRelyingParty: Constants.XSTSRelyingParty })
+				.catch((err) => {
+					console.warn('Unable to authenticate with Microsoft', err);
+					throw err;
+				});
+		} catch (error) {
+			console.log('Retrying auth with device code flow');
+			return await this.authenticateDeviceToken(client, options);
+		}
+
+		try {
+			const MineServicesResponse = await fetch(Constants.MinecraftServicesLogWithXbox, {
+				method: 'post',
+				...Constants.NodeFetchOptions,
+				body: JSON.stringify({ identityToken: `XBL3.0 x=${XAuthResponse.userHash};${XAuthResponse.XSTSToken}` })
+			}).then(Util.checkStatus);
+
+			Constants.NodeFetchOptions.headers.Authorization = `Bearer ${MineServicesResponse.access_token}`;
+			const MineEntitlements = await fetch(Constants.MinecraftServicesEntitlement, Constants.NodeFetchOptions).then(Util.checkStatus);
+			if (MineEntitlements.items.length === 0) throw Error('This user does not have any items on its accounts according to minecraft services.');
+
+			return await this.postAuthenticate(client, options, MineServicesResponse.access_token);
+		} catch (err) {
+			console.error(err);
+			return client.emit('error', err);
+		}
 	}
 
-	try {
-		const MineServicesResponse = await fetch(Constants.MinecraftServicesLogWithXbox, {
-			method: 'post',
-			...Constants.NodeFetchOptions,
-			body: JSON.stringify({ identityToken: `XBL3.0 x=${XAuthResponse.userHash};${XAuthResponse.XSTSToken}` })
-		}).then(Util.checkStatus);
-
-		Constants.NodeFetchOptions.headers.Authorization = `Bearer ${MineServicesResponse.access_token}`;
-		const MineEntitlements = await fetch(Constants.MinecraftServicesEntitlement, Constants.NodeFetchOptions).then(Util.checkStatus);
-		if (MineEntitlements.items.length === 0) throw Error('This user does not have any items on its accounts according to minecraft services.');
-
-		return await postAuthenticate(client, options, MineServicesResponse.access_token);
-	} catch (err) {
-		console.error(err);
-		return client.emit('error', err);
-	}
-}
-
-/**
+	/**
    * Authenticates to Minecraft via device code based Microsoft auth,
    * then connects to the specified server in Client Options
    *
@@ -163,21 +161,21 @@ async function authenticatePassword(client, options) {
    * @param {Object} client - The client passed to protocol
    * @param {Object} options - Client Options
    */
-async function authenticateDeviceToken(client, options) {
-	try {
-		const flow = new MicrosoftAuthFlow(options.username, options.profilesFolder, options.onMsaCode);
-		const token = await flow.getMinecraftToken();
-		console.log('Acquired Minecraft token', token);
+	static async authenticateDeviceToken(client, options) {
+		try {
+			const flow = new MicrosoftAuthFlow(options.username, options.profilesFolder, options.onMsaCode);
+			const token = await flow.getMinecraftToken();
+			console.log('Acquired Minecraft token', token);
 
-		Constants.NodeFetchOptions.headers.Authorization = `Bearer ${token}`;
-		await postAuthenticate(client, options, token, flow.msa);
-	} catch (err) {
-		console.error(err);
-		client.emit('error', err);
+			Constants.NodeFetchOptions.headers.Authorization = `Bearer ${token}`;
+			await this.postAuthenticate(client, options, token, flow.msa);
+		} catch (err) {
+			console.error(err);
+			client.emit('error', err);
+		}
 	}
+
 }
 
-module.exports = {
-	authenticatePassword,
-	authenticateDeviceToken
-};
+
+module.exports = MicrosoftAuthFlow;
