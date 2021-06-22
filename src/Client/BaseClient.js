@@ -4,9 +4,8 @@ const EventEmitter = require('events');
 const net = require('net');
 const dns = require('dns');
 const crypto = require('crypto');
+
 const minecraftData = require('minecraft-data');
-const Constants = require('../Util/Constants');
-const Util = require('../Util/Util');
 
 const Splitter = require('../Util/Splitter');
 const Framer = require('../Util/Framer');
@@ -17,6 +16,8 @@ const Decipher = require('../Util/Decipher');
 const createSerializer = require('../Util/Serializer');
 const createDeserializer = require('../Util/Deserializer');
 
+const Constants = require('../Util/Constants');
+const Util = require('../Util/Util');
 /**
  * Constructs the base client. This is practically a serializer.
  * @param {BaseClientOptions} [options={}] The configuration to pass to this class.
@@ -181,8 +182,8 @@ class BaseClient extends EventEmitter {
 			this.serializer.pipe(this.compressor);
 			this.decompressor.pipe(this.deserializer);
 		}
-
-		return this.emit('state', property, oldProperty);
+		this.emit('state', property, oldProperty);
+		return;
 	}
 
 	/**
@@ -261,7 +262,7 @@ class BaseClient extends EventEmitter {
 
 	/**
 	 * Used to create the cipher/decipher engine after yggdrasil server authentication.
-	 * @param {string} secret 
+	 * @param {string} secret a secret secret
 	 */
 	setEncryption(secret) {
 		if (this.cipher !== null) this.emit('error', new Error('Set encryption twice!'));
@@ -339,7 +340,7 @@ class BaseClient extends EventEmitter {
 		if (this.destroyed) return;
 		this.emit('debug', `BaseClient was destroyed. Called by:\n${new Error('BASECLIENT_DESTROYED').stack}`);
 		this.destroyed = true;
-		this.end('internal destroy')
+		this.end('internal destroy');
 	}
 
 	/**
@@ -380,6 +381,7 @@ class BaseClient extends EventEmitter {
 
 	/**
 	 * Connects to the host specified in BaseClientOptions.
+	 * @returns {socket} socket A network socket for the server
 	 */
 	connect() {
 		if (this.options.stream) {
