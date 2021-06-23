@@ -18,11 +18,6 @@ const createDeserializer = require('../Util/Deserializer');
 
 const Constants = require('../Util/Constants');
 const Util = require('../Util/Util');
-/**
- * Constructs the base client. This is practically a serializer.
- * @param {BaseClientOptions} [options={}] The configuration to pass to this class.
- * @extends {EventEmitter}
- */
 
 class BaseClient extends EventEmitter {
 
