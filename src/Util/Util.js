@@ -2,6 +2,8 @@ const path = require('path');
 const os = require('os');
 const crypto = require('crypto');
 
+const primitiveTypes = ['string', 'bigint', 'number', 'boolean'];
+
 class Util {
 
 	constructor() {
@@ -67,11 +69,11 @@ class Util {
 	}
 
 	static isPrimitive(value) {
-		return Util.PRIMITIVE_TYPES.includes(typeof value);
+		return primitiveTypes.includes(typeof value);
 	}
 
 	// Credit to https://github.com/simonmeusel/minecraft-folder-path
-	get cacheLocation() {
+	static cacheLocation() {
 		const OperatingSystem = os.type();
 		if (OperatingSystem === 'Darwin') return path.join(os.homedir(), '/Library/Application Support/minecraft');
 		// eslint-disable-next-line no-process-env
