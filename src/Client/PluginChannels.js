@@ -1,19 +1,19 @@
 const { ProtoDef } = require('protodef');
-const Minecraft = require('../Util/DataTypes/minecraft');
+const minecraft = require('../Util/DataTypes/minecraft');
 
 class PluginChannels {
 
 	constructor(client) {
 		this.client = client;
 
-		const mcdata = require('minecraft-data')(this.options.version);
+		const mcdata = require('minecraft-data')(this.client.options.version);
 
 		this.channels = [];
 
 		this.proto = new ProtoDef();
 		this.proto.addTypes(mcdata.protocol.types);
-		this.proto.addTypes(Minecraft);
-		this.proto.addTypes('registerarr', [readDumbArr, writeDumbArr, sizeOfDumbArr]);
+		this.proto.addTypes(minecraft);
+		this.proto.addType('registerarr', [readDumbArr, writeDumbArr, sizeOfDumbArr]);
 
 		this.client.registerChannel = this.registerChannel;
 		this.client.unregisterChannel = this.unregisterChannel;

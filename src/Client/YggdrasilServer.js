@@ -6,13 +6,13 @@ class YggdrasilServer {
 	constructor(client) {
 		this.client = client;
 		this.server = yggdrasil.server({ agent: this.client.options.agent, host: this.client.options.sessionServer });
-		this.client.once('encryption_begin', this.beginEncryption);
+		this.client.once('encryption_begin', this.beginEncryption.bind(this));
 	}
 
 	beginEncryption(packet) {
 		const secret = this.generateSecret();
-		if (this.client.options.haveCredentials) {
-			this.server.join(this.options.accessToken, this.client.session.selectedProfile.id, packet.serverId, secret, packet.publicKey, (error) => {
+		if (this.client.haveCredentials || this.client.options.haveCredentials) {
+			this.server.join(this.client.accessToken, this.client.session.selectedProfile.id, packet.serverId, secret, packet.publicKey, (error) => {
 				if (error) {
 					this.client.emit('error', error);
 					this.client.end();
@@ -21,7 +21,7 @@ class YggdrasilServer {
 				}
 			});
 		} else {
-			if (packet.serverId !== '-') this.emit('debug', 'This server appears to be an online server and you are not providing any means of authentication, this is going to fail');
+			if (packet.serverId !== '-') this.client.emit('debug', 'This server appears to be an online server and you are not providing any means of authentication, this is going to fail');
 			this.sendEncryptedResponse(packet, secret);
 		}
 	}

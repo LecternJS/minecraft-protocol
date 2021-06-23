@@ -30,14 +30,18 @@ class BaseClient extends EventEmitter {
 		if (!Util.isObject(options)) throw new TypeError('BaseClient must be initiated with an object!');
 		super();
 
+		const mcData = minecraftData(options.version ?? '1.16.5');
+		if (!mcData) throw Error(`Unsupported Protocol Version: ${options.version ?? '1.16.5'}`);
+		options.majorVersion = mcData.version.majorVersion;
+		options.protocolVersion = mcData.version.version;
+		options.version = mcData.version.minecraftVersion;
+
 		/**
 		 * The options the client was initiated with.
 		 * @name BaseClient#options
 		 * @type {BaseClientOptions}
 		 */
 		this.options = Util.mergeDefault(Constants.BaseClient, options);
-		const minecraftdata = minecraftData(this.options.version);
-		if (!minecraftdata) throw Error(`Unsupported Protocol Version: ${this.options.version}`);
 
 		/**
 		 * Whether or not this process is in production or not.
@@ -51,20 +55,17 @@ class BaseClient extends EventEmitter {
 		 * The Minecraft Version of the server we are connecting to. Set to '1.16.4' by default, 'false' to auto-detect.
 		 * @type {string|boolean}
 		 */
-		this.version = minecraftdata.version;
+		this.version = mcData.version.minecraftVersion;
+		this.majorVersion = mcData.version.majorVersion;
+		this.protocolVersion = mcData.version.version;
+
+		// Note to self, i am just too lazy to go and remove these duplicates. Im glad its working now tho.
 
 		/**
 		 * If this client was destroyed. It will prevent the client from reconnecting.
 		 * @type {boolean}
 		 */
 		this.destroyed = true;
-
-		/**
-		 * The state this bot is in with trying to connect to the remote host.
-		 * @type {string}
-		 * @private
-		 */
-		this.state = Constants.ProtocolStates.HANDSHAKING;
 
 		/**
      	* If this manager is currently reconnecting one or multiple shards
@@ -145,6 +146,13 @@ class BaseClient extends EventEmitter {
 		 * @private
 		 */
 		this.closeTimer = null;
+
+		/**
+		 * The state this bot is in with trying to connect to the remote host.
+		 * @type {string}
+		 * @private
+		 */
+		this.state = Constants.ProtocolStates.HANDSHAKING;
 	}
 
 	/**
@@ -401,6 +409,8 @@ class BaseClient extends EventEmitter {
 				}
 			});
 		}
+
+		this.emit('debug', `[Host] ${this.options.host} [Port] ${this.options.port}`);
 
 		return this.setSocket(net.connect(this.options.port, this.options.host));
 	}

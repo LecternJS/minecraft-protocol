@@ -17,7 +17,7 @@ class Decompressor extends Transform {
 			this.push(chunk.slice(size));
 			return callback();
 		} else {
-			const buffer = zlib.unzip(chunk.slice(size), { finishFlush: 2 }, (err, newBuf) => {
+			return zlib.unzip(chunk.slice(size), { finishFlush: 2 }, (err, newBuf) => {
 				if (err) {
 					if (!this.hideErrors) {
 						console.error('problem inflating chunk');
@@ -28,14 +28,13 @@ class Decompressor extends Transform {
 					}
 					return callback();
 				}
-				return newBuf;
-			});
 
-			if (buffer.length !== value && !this.hideErrors) {
-				console.error(`uncompressed length should be ${value} but is ${buffer.length}`);
-			}
-			this.push(buffer);
-			return callback();
+				if (newBuf.length !== value && !this.hideErrors) {
+					console.error(`uncompressed length should be ${value} but is ${newBuf.length}`);
+				}
+				this.push(newBuf);
+				return callback();
+			});
 		}
 	}
 

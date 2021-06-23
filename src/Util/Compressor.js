@@ -1,4 +1,5 @@
-const { types: { varint: [writeVarInt, sizeOfVarInt] } } = require('protodef');
+// eslint-disable-next-line no-unused-vars
+const { types: { varint: [read, writeVarInt, sizeOfVarInt] } } = require('protodef');
 const zlib = require('zlib');
 const { Transform } = require('readable-stream');
 

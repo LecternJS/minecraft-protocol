@@ -1,4 +1,4 @@
-const FullPacketParser = require('protodef');
+const { FullPacketParser } = require('protodef');
 const manageProtocols = require('./ProtocolHandler');
 const Constants = require('./Constants');
 

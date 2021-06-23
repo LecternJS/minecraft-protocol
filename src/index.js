@@ -7,14 +7,11 @@ module.exports = {
 	BaseClient: require('./Client/BaseClient'),
 	Client: require('./Client/Client'),
 
-	BaseServer: require('./Server/BaseServer'),
-	Server: require('./Server/Server'),
-
 	MicrosoftAuthentication: require('./Client/MicrosoftAuthentication'),
 	MicrosoftTokenManager: require('./Client/MicrosoftTokenManager'),
 	MinecraftTokenManger: require('./Client/MinecraftTokenManager'),
 	XboxTokenManager: require('./Client/XboxTokenManager'),
-	MojangAuthentication: require('./Client/MojangAuthentication'),
+	// MojangAuthentication: require('./Client/MojangAuthentication'),
 
 	// Utilities
 	Cipher: require('./Util/Cipher'),

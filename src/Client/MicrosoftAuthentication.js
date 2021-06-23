@@ -1,5 +1,5 @@
 const XboxLiveAuth = require('@xboxreplay/xboxlive-auth');
-const fetch = require('node');
+const fetch = require('node-fetch');
 
 const path = require('path');
 const fs = require('fs');
@@ -19,7 +19,7 @@ class MicrosoftAuthFlow {
 		debug(`Initializing cache...`);
 		const hash = Util.hash(username).substr(0, 6);
 
-		this.cachePath = cacheDirectory || Util.cacheLocation;
+		this.cachePath = cacheDirectory ?? Util.cacheLocation();
 		try {
 			if (!fs.existsSync(`${this.cachePath}/nmp-cache`)) {
 				fs.mkdirSync(`${this.cachePath}/nmp-cache`);
@@ -81,12 +81,12 @@ class MicrosoftAuthFlow {
 		}
 	}
 
-	static async postAuthenticate(client, options, mcAccessToken, msa) {
-		options.haveCredentials = mcAccessToken !== null;
+	static async postAuthenticate(client, mcAccessToken, msa) {
+		client.haveCredentials = mcAccessToken !== null;
 
 		const MinecraftProfile = await fetch(Constants.MinecraftServicesProfile, Constants.NodeFetchOptions).then((res) => {
 			if (res.ok) { return res.json(); } else {
-				const user = msa ? msa.getUsers()[0] : options.username;
+				const user = msa ? msa.getUsers()[0] : client.username;
 				throw Error(`Failed to obtain Minecraft profile data for '${user.username}', does the account own Minecraft Java? Server returned: ${res.statusText}`);
 			}
 		});
@@ -108,9 +108,8 @@ class MicrosoftAuthFlow {
 		};
 		client.session = session;
 		client.username = MinecraftProfile.name;
-		options.accessToken = mcAccessToken;
+		client.accessToken = mcAccessToken;
 		client.emit('session', session);
-		options.connect(client);
 	}
 
 	/**
@@ -121,18 +120,18 @@ class MicrosoftAuthFlow {
    * @param {Object} client - The client passed to protocol
    * @param {Object} options - Client Options
    */
-	static async authenticatePassword(client, options) {
+	static async authenticatePassword(client) {
 		let XAuthResponse;
 
 		try {
-			XAuthResponse = await XboxLiveAuth.authenticate(options.username, options.password, { XSTSRelyingParty: Constants.XSTSRelyingParty })
+			XAuthResponse = await XboxLiveAuth.authenticate(client.username, client.password, { XSTSRelyingParty: Constants.XSTSRelyingParty })
 				.catch((err) => {
 					console.warn('Unable to authenticate with Microsoft', err);
 					throw err;
 				});
 		} catch (error) {
 			console.log('Retrying auth with device code flow');
-			return await this.authenticateDeviceToken(client, options);
+			return await this.authenticateDeviceToken(client);
 		}
 
 		try {
@@ -146,7 +145,7 @@ class MicrosoftAuthFlow {
 			const MineEntitlements = await fetch(Constants.MinecraftServicesEntitlement, Constants.NodeFetchOptions).then(Util.checkStatus);
 			if (MineEntitlements.items.length === 0) throw Error('This user does not have any items on its accounts according to minecraft services.');
 
-			return await this.postAuthenticate(client, options, MineServicesResponse.access_token);
+			return await this.postAuthenticate(client, MineServicesResponse.access_token);
 		} catch (err) {
 			console.error(err);
 			return client.emit('error', err);
@@ -161,14 +160,14 @@ class MicrosoftAuthFlow {
    * @param {Object} client - The client passed to protocol
    * @param {Object} options - Client Options
    */
-	static async authenticateDeviceToken(client, options) {
+	static async authenticateDeviceToken(client) {
 		try {
-			const flow = new MicrosoftAuthFlow(options.username, options.profilesFolder, options.onMsaCode);
+			const flow = new MicrosoftAuthFlow(client.username, client.profilesFolder, client.onMsaCode);
 			const token = await flow.getMinecraftToken();
 			console.log('Acquired Minecraft token', token);
 
 			Constants.NodeFetchOptions.headers.Authorization = `Bearer ${token}`;
-			await this.postAuthenticate(client, options, token, flow.msa);
+			await this.postAuthenticate(client, token, flow.msa);
 		} catch (err) {
 			console.error(err);
 			client.emit('error', err);

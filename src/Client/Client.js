@@ -6,7 +6,6 @@ const BaseClient = require('./BaseClient');
 const Constants = require('../Util/Constants');
 
 const MicrosoftAuthentication = require('./MicrosoftAuthentication');
-const MojangAuthentication = require('./MojangAuthentication');
 const queryServer = require('./QueryServer');
 
 const KeepAlive = require('./KeepAlive');
@@ -58,13 +57,6 @@ class Client extends BaseClient {
 		this.baseDirectory = path.dirname(require.main.filename);
 
 		/**
-		 * The keep alive handler.
-		 * @name Client#keepAlive
-		 * @type {KeepAlive}
-		 */
-		this.keepAlive = new KeepAlive(this);
-
-		/**
 		 * Handles when the client is ready and has successfully joined the server.
 		 * @name Client#letsPlay
 		 * @type {LetsPlay}
@@ -72,15 +64,22 @@ class Client extends BaseClient {
 		this.letsPlay = new LetsPlay(this);
 
 		/**
+		 * The keep alive handler.
+		 * @name Client#keepAlive
+		 * @type {KeepAlive}
+		 */
+		this.keepAlive = new KeepAlive(this);
+
+		this.yggdrasil = new YggdrasilServer(this);
+
+
+		this.compression = new Compression(this);
+		/**
 		 * Introduces plugin channels to the client.
 		 * @name Client#pluginChannels
 		 * @type {PluginChannels}
 		 */
 		this.pluginChannels = new PluginChannels(this);
-
-		this.compression = new Compression(this);
-
-		this.yggdrasil = new YggdrasilServer(this);
 
 
 		//
@@ -99,29 +98,17 @@ class Client extends BaseClient {
 	/**
 	 * The entry function to connect your bot to your specific server.
 	 * @since 0.0.1
-	 * @param {string} [username=this.username] An email or username of a mojang or microsoft account to login with.
-	 * @param {string} [password=this.password] A secret password that you use with the respective service to login with.
 	 * @returns {Promise<string>} Username of the account used.
 	 */
-	async login(username = this.username, password = this.password) {
-		if (!username || typeof username !== 'string') throw new TypeError('Invalid Username. Username must be a string.');
-		// password was not passed or password is not a string aand if offline
-		if ((!password || typeof password !== 'string') && !/(microsoft|ms)/i.test(this.options.auth)) {
-			if (!this.options.offlineMode) throw new TypeError('Invalid Password, Attempted to login with no password.');
-		}
-
+	async login() {
 		// Are we auto detecting the server's minecraft version?
 		if (this.options.version === false) this.autoVersion = true;
 
-		this.emit('debug', `Provided username: ${username}`);
+		this.emit('debug', `Provided username: ${this.options.username}`);
 		this.emit('debug', 'Preforming authentication...');
 
-		if (/(microsoft|ms)/i.test(this.options.auth)) {
-			if (this.options.password) await MicrosoftAuthentication.authenticatePassword(this);
-			else await MicrosoftAuthentication.authenticateDeviceToken(this);
-		} else {
-			await MojangAuthentication.authenticate(this);
-		}
+		if (this.options.password) await MicrosoftAuthentication.authenticatePassword(this);
+		else await MicrosoftAuthentication.authenticateDeviceToken(this);
 
 		if (this.options.version === false) await queryServer(this);
 

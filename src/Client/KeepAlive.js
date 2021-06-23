@@ -15,7 +15,7 @@ class KeepAlive {
          * @name KeepAlive#enabled
          * @type {Boolean}
          */
-		this.enabled = this.client.options.keepalive.enabled;
+		this.enabled = this.client.options.keepalive.enabled ?? true;
 
 		/**
          * The timeout function for keepalive.
@@ -25,8 +25,8 @@ class KeepAlive {
          */
 		this.timeout = null;
 
-		this.client.on('keep_alive', this.keepalive);
-		this.client.on('end', clearTimeout(this.timeout));
+		this.client.on('keep_alive', this.keepalive.bind(this));
+		this.client.on('end', () => clearTimeout(this.timeout));
 	}
 
 	/**
@@ -37,7 +37,7 @@ class KeepAlive {
 	keepalive(packet) {
 		if (!this.enabled) return;
 		if (this.timeout) clearTimeout(this.timeout);
-		this.timeout = setTimeout(() => this.client.end(), this.client.options.keepalive.interval);
+		this.timeout = setTimeout(() => this.client.end(), this.client.options.keepalive.interval ?? 30000);
 		this.client.write('keep_alive', { keepAliveId: packet.keepAliveId });
 	}
 

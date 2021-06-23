@@ -5,8 +5,9 @@ class LetsPlay {
 	constructor(client) {
 		this.client = client;
 
-		this.client.once('success');
-		this.client.on('connect', this.connect);
+		this.client.once('success', this.success.bind(this));
+		this.client.on('connect', this.connect.bind(this));
+		this.client.on('disconnect', this.disconnect.bind(this));
 	}
 
 	success(packet) {

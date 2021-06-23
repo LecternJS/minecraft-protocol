@@ -1,4 +1,4 @@
-const { types: { varint: [writeVarInt, sizeOfVarInt] } } = require('protodef');
+const { types: { varint: [readVarInt, writeVarInt, sizeOfVarInt] } } = require('protodef');
 const { Transform } = require('readable-stream');
 
 /**
