@@ -22,8 +22,9 @@
     "@azure/msal-node": "^1.0.0-beta.3",
     "@xboxreplay/xboxlive-auth": "^3.3.3",
     "fs-nextra": "^0.5.1",
-    "minecraft-data": "^2.72.0",
+    "minecraft-data": "^2.85.3",
     "node-fetch": "^2.6.1",
+    "prismarine-nbt": "^1.5.0",
     "protodef": "^1.8.3",
     "uuid-1345": "^1.0.2",
     "yggdrasil": "^1.4.0"
