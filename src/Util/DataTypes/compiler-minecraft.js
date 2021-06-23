@@ -25,7 +25,7 @@ module.exports = {
 			code += '}';
 			return compiler.wrapCode(code);
 		}],
-		topBitSetTerminatedArray: ['parametrizable', (compiler, { type, endVal }) => {
+		topBitSetTerminatedArray: ['parametrizable', (compiler, { type }) => {
 			let code = 'let cursor = offset\n';
 			code += 'const data = []\n';
 			code += 'while (true) {\n';

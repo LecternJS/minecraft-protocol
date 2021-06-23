@@ -1,3 +1,4 @@
+// eslint-disable-next-line no-unused-vars
 const { types: { varint: [readVarInt, writeVarInt, sizeOfVarInt] } } = require('protodef');
 const { Transform } = require('readable-stream');
 
