@@ -8,9 +8,9 @@
   "license": "MIT",
   "devDependencies": {
     "debug": "^4.3.1",
+    "discord.js-docgen": "github:discordjs/docgen",
     "eslint": "^7.17.0",
-    "eslint-config-kashall": "https://github.com/Kashalls/kashall-lint.git",
-    "discord.js-docgen": "github:discordjs/docgen"
+    "eslint-config-kashall": "https://github.com/Kashalls/kashall-lint.git"
   },
   "scripts": {
     "test": "npm run lint && npm run docs:test && npm run lint:typings",
