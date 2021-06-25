@@ -1,5 +1,11 @@
+/**
+ * Handles continueous connections to the remote server to keep the connection alive.
+ */
 class KeepAlive {
 
+	/**
+      * @param {Client} client The client that this will do packets for.
+      */
 	constructor(client) {
 		/**
          * The client this was created with.

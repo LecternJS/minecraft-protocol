@@ -23,16 +23,6 @@ class Server extends BaseServer {
 		this.options = options;
 
 		/**
-         * The protocol version for minecraft of this server.
-         * @since 0.0.1
-         * @name Server#version
-         * @type {string}
-         */
-		const minecraftData = require('minecraft-data')(this.options.version ?? ServerDefaults.version);
-		if (!minecraftData) throw new Error(`Unsupported Protocol Version: ${this.options.version}`);
-		this.version = minecraftData.version;
-
-		/**
          * The server key for this minecraft server. Required for authentication.
          * @since 0.0.1
          * @name Server#serverKey

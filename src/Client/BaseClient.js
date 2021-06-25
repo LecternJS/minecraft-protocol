@@ -19,8 +19,15 @@ const createDeserializer = require('../Util/Deserializer');
 const Constants = require('../Util/Constants');
 const Util = require('../Util/Util');
 
+/**
+ * The base packet client
+ * @extends {EventEmitter}
+ */
 class BaseClient extends EventEmitter {
 
+	/**
+	 * @param {BaseClientOptions} options options for the baseclient
+	 */
 	constructor(options = {}) {
 		if (!Util.isObject(options)) throw new TypeError('BaseClient must be initiated with an object!');
 		super();
@@ -150,12 +157,6 @@ class BaseClient extends EventEmitter {
 		this.state = Constants.ProtocolStates.HANDSHAKING;
 	}
 
-	/**
-	 * Fetches the current state of interaction with the minecraft protocol.
-	 * @since 0.0.1
-	 * @type {string}
-	 * @readonly
-	 */
 	get state() {
 		return this.protocolState || 'Unknown';
 	}

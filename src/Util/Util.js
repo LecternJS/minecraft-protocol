@@ -5,7 +5,9 @@ const crypto = require('crypto');
 const { Buffer } = require('buffer');
 
 const primitiveTypes = ['string', 'bigint', 'number', 'boolean'];
-
+/**
+ * Contains various general-purpose utility methods. These functions are also available on the base object.
+ */
 class Util {
 
 	constructor() {

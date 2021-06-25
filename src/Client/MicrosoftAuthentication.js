@@ -13,8 +13,16 @@ const MinecraftTokenManager = require('./MinecraftTokenManager');
 
 const debug = require('debug')('minecraft-protocol:msal');
 
+/**
+ * Handles authenticating with the microsoft endpoint as well as caching for later.
+ */
 class MicrosoftAuthFlow {
 
+	/**
+	 * @param {string} username The email associated to the minecraft account.
+	 * @param {string[]} cacheDirectory The directory where we should hold these files.
+	 * @param {Function} codeCallback The function to return to when code has been recieved.
+	 */
 	constructor(username, cacheDirectory, codeCallback) {
 		debug(`Initializing cache...`);
 		const hash = Util.hash(username).substr(0, 6);

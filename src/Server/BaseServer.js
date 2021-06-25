@@ -31,6 +31,7 @@ class Server extends EventEmitter {
 		/**
          * The net socket server created and listening.
          * @since 0.0.1
+		 * @private
          * @type {Socket}
          */
 		this.socketServer = null;
@@ -38,6 +39,7 @@ class Server extends EventEmitter {
 		/**
          * A object of all clients connected to the server.
          * @since 0.0.1
+		 * @private
          * @type {Object<Object>}
          */
 		this.clients = {};
@@ -59,6 +61,7 @@ class Server extends EventEmitter {
 		/**
          * Packet seriaizer
          * @since 0.0.1
+		 * @private
          * @type {Serializer}
          */
 		this.serializer = new Serializer({ state: 'play', isServer: true, version, customPackets });
