@@ -89,3 +89,6 @@ typings/
 
 
 *_*-cache.json
+
+test/server_*/
+versions/

@@ -17,7 +17,7 @@ function createProtocol(state, direction, version, customPackets, compiled = tru
 
 	if (compiled) {
 		const compiler = new FullPacketParser.Compiler.ProtoDefCompiler();
-		compiler.addTypes(require('./DataTypes/Compiler-Minecraft'));
+		compiler.addTypes(require('./DataTypes/compiler-minecraft'));
 		compiler.addProtocol(merge(mcData.protocol, get(customPackets, [mcData.version.majorVersion])), [state, direction]);
 		const proto = compiler.compileProtoDefSync();
 		protocols[key] = proto;
