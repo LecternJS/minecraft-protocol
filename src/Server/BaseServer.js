@@ -45,7 +45,7 @@ class Server extends EventEmitter {
 		/**
          * Object of all custom packets we should parse.
          * @since 0.0.1
-         * @type {Object<Object>}
+         * @type {Object}
          */
 		this.customPackets = customPackets;
 
