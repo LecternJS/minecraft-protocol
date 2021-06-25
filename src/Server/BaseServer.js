@@ -38,14 +38,14 @@ class Server extends EventEmitter {
 		/**
          * A object of all clients connected to the server.
          * @since 0.0.1
-         * @type {Object<Object}
+         * @type {Object<Object>}
          */
 		this.clients = {};
 
 		/**
          * Object of all custom packets we should parse.
          * @since 0.0.1
-         * @type {Object}
+         * @type {Object<Object>}
          */
 		this.customPackets = customPackets;
 
