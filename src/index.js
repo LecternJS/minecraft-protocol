@@ -7,6 +7,9 @@ module.exports = {
 	BaseClient: require('./Client/BaseClient'),
 	Client: require('./Client/Client'),
 
+	BaseServer: require('./Server/BaseServer'),
+	Server: require('./Server/Server'),
+
 	MicrosoftAuthentication: require('./Client/MicrosoftAuthentication'),
 	MicrosoftTokenManager: require('./Client/MicrosoftTokenManager'),
 	MinecraftTokenManger: require('./Client/MinecraftTokenManager'),
@@ -25,5 +28,8 @@ module.exports = {
 	ProtocolHandler: require('./Util/ProtocolHandler'),
 	Ping: require('./Client/Ping'),
 	QueryServer: require('./Client/QueryServer'),
-	Util: Util
+	Util: Util,
+
+	States: require('./Util/Constants/States'),
+	SupportedVersions: require('./Util/Constants/Versions').supportedVersions
 };

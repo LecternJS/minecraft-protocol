@@ -2,6 +2,8 @@ const path = require('path');
 const os = require('os');
 const crypto = require('crypto');
 
+const { Buffer } = require('buffer');
+
 const primitiveTypes = ['string', 'bigint', 'number', 'boolean'];
 
 class Util {
@@ -104,6 +106,47 @@ class Util {
 		}
 		pem += '-----END PUBLIC KEY-----\n';
 		return pem;
+	}
+
+
+	static endianToggle(buf, bits) {
+		var output = new Buffer(buf.length);
+
+		if (bits % 8 !== 0) {
+			throw new Error('bits must be a multiple of 8');
+		}
+
+		var bytes = bits / 8;
+		if (buf.length % bytes !== 0) {
+			throw new Error(`${buf.length % bytes} non-aligned trailing bytes`);
+		}
+
+		for (var i = 0; i < buf.length; i += bytes) {
+			for (var j = 0; j < bytes; j++) {
+				output[i + bytes - j - 1] = buf[i + j];
+			}
+		}
+
+		return output;
+	}
+
+	/**
+	 * Check to see if two buffers are exactly equal to each other.
+	 * @param {buffer} bufferA A buffer.
+	 * @param {buffer} bufferB A buffer.
+	 * @returns {(undefined|boolean)}
+	 */
+	static bufferEquals(bufferA, bufferB) {
+		if (!Buffer.isBuffer(bufferA)) return undefined;
+		if (!Buffer.isBuffer(bufferB)) return undefined;
+		if (typeof bufferA.equals === 'function') return bufferA.equals(bufferB);
+		if (bufferA.length !== bufferB.length) return false;
+
+		for (var i = 0; i < bufferA.length; i++) {
+			if (bufferA[i] !== bufferB[i]) return false;
+		}
+
+		return true;
 	}
 
 
