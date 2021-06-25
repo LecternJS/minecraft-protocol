@@ -3,7 +3,7 @@
 const ITERATIONS = 10000;
 
 const mc = require('../src');
-const { states } = mc;
+const { States } = mc;
 
 const testDataWrite = [
 	{ name: 'keep_alive', params: { keepAliveId: 957759560 } },
@@ -21,7 +21,7 @@ for (const supportedVersion of mc.SupportedVersions) {
 		this.timeout(60 * 1000);
 		const inputData = [];
 		it('bench serializing', (done) => {
-			const serializer = new mc.Serializer({ state: states.PLAY, isServer: false, version: version.minecraftVersion });
+			const serializer = new mc.Serializer({ state: States.PLAY, isServer: false, version: version.minecraftVersion });
 			let i, j;
 			console.log('Beginning write test');
 			const start = Date.now();
@@ -36,7 +36,7 @@ for (const supportedVersion of mc.SupportedVersions) {
 		});
 
 		it('bench parsing', (done) => {
-			const deserializer = new mc.Deserializer({ state: states.PLAY, isServer: true, version: version.minecraftVersion });
+			const deserializer = new mc.Deserializer({ state: States.PLAY, isServer: true, version: version.minecraftVersion });
 			console.log('Beginning read test');
 			const start = Date.now();
 			for (let j = 0; j < inputData.length; j++) {

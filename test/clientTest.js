@@ -86,7 +86,7 @@ for (const supportedVersion of mc.SupportedVersions) {
 			});
 
 			it('connects successfully - offline mode', (done) => {
-				const client = mc.createClient({
+				const client = new mc.Client({
 					username: 'Player',
 					version: version.minecraftVersion,
 					port: PORT
@@ -135,7 +135,7 @@ for (const supportedVersion of mc.SupportedVersions) {
 			});
 
 			it(`does not crash for ${SURVIVE_TIME}ms`, (done) => {
-				const client = mc.createClient({
+				const client = new mc.Client({
 					username: 'Player',
 					version: version.minecraftVersion,
 					port: PORT
@@ -154,7 +154,7 @@ for (const supportedVersion of mc.SupportedVersions) {
 			});
 
 			it('produce a decent error when connecting with the wrong version', (done) => {
-				const client = mc.createClient({
+				const client = new mc.Client({
 					username: 'Player',
 					version: version.minecraftVersion === '1.8.8' ? '1.11.2' : '1.8.8',
 					port: PORT
@@ -201,7 +201,7 @@ for (const supportedVersion of mc.SupportedVersions) {
 			});
 
 			it.skip('connects successfully - online mode', (done) => {
-				const client = mc.createClient({
+				const client = new mc.Client({
 					username: process.env.MC_USERNAME,
 					password: process.env.MC_PASSWORD,
 					version: version.minecraftVersion,
@@ -239,7 +239,7 @@ for (const supportedVersion of mc.SupportedVersions) {
 			});
 
 			it('gets kicked when no credentials supplied in online mode', (done) => {
-				const client = mc.createClient({
+				const client = new mc.Client({
 					username: 'Player',
 					version: version.minecraftVersion,
 					port: PORT

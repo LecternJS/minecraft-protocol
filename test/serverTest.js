@@ -134,7 +134,7 @@ for (const supportedVersion of mc.SupportedVersions) {
 				resolve();
 			});
 			server.on('listening', () => {
-				const client = mc.createClient({
+				const client = new mc.Client({
 					username: 'superpants',
 					host: '127.0.0.1',
 					port: PORT,
@@ -233,7 +233,7 @@ for (const supportedVersion of mc.SupportedVersions) {
 			});
 			server.on('close', done);
 			server.on('listening', () => {
-				const player1 = mc.createClient({
+				const player1 = new mc.Client({
 					username: 'player1',
 					host: '127.0.0.1',
 					version: version.minecraftVersion,
@@ -263,7 +263,7 @@ for (const supportedVersion of mc.SupportedVersions) {
 						});
 						player2.write('chat', { message: 'hi' });
 					});
-					const player2 = mc.createClient({
+					const player2 = new mc.Client({
 						username: 'player2',
 						host: '127.0.0.1',
 						version: version.minecraftVersion,
@@ -300,7 +300,7 @@ for (const supportedVersion of mc.SupportedVersions) {
 			});
 			server.on('listening', () => {
 				resolve();
-				const client = mc.createClient({
+				const client = new mc.Client({
 					username: 'lalalal',
 					host: '127.0.0.1',
 					version: version.minecraftVersion,
@@ -357,7 +357,7 @@ for (const supportedVersion of mc.SupportedVersions) {
 				resolve();
 			});
 			server.on('listening', () => {
-				const client = mc.createClient({
+				const client = new mc.Client({
 					username: 'lalalal',
 					host: '127.0.0.1',
 					version: version.minecraftVersion,
@@ -407,13 +407,13 @@ for (const supportedVersion of mc.SupportedVersions) {
 			});
 			server.on('close', done);
 			server.on('listening', async () => {
-				const player1 = mc.createClient({
+				const player1 = new mc.Client({
 					username: 'player1',
 					host: '127.0.0.1',
 					version: version.minecraftVersion,
 					port: PORT
 				});
-				const player2 = mc.createClient({
+				const player2 = new mc.Client({
 					username: 'player2',
 					host: '127.0.0.1',
 					version: version.minecraftVersion,
